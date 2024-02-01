@@ -1,0 +1,19 @@
+# installing some essential tools on host.
+---
+
+- name: ensure {{ item }} is present on system
+  ansible.builtin.dnf:
+    name: '{{ item }}'
+    state: latest
+  loop:
+    - 'tmux'
+    - 'reptyr'
+    - 'vim'
+    - 'pv'
+    - 'p7zip'
+    - 'p7zip-plugins'
+    - 'dmg2img'
+    - 'wget'
+    - 'ncdu'
+    - 'lshw'
+  become: true

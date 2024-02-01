@@ -1,0 +1,34 @@
+---
+
+# ensure additional bash functions are available on *nix systems
+- name: ensure additional bash functions are present
+  block:
+    - ansible.builtin.file:
+        path: '/usr/local/lib/bash'
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - ansible.builtin.get_url:
+        url: 'https://raw.githubusercontent.com/g4s/collecction/master/nix/lib/{{ item }}'
+        dest: '/usr/local/lib/bash/{{ item }}'
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - 'system.sh'
+  when: ansible_os_family != 'Windows'
+
+- ansible.builtin.include_tasks:
+    file: './tasks/{{ ansible_os_family }}/main.yml'
+
+# install mergeFS --> https://github.com/trapexit/mergerfs
+
+- name: ensure tailscale is up and running
+  block:
+    - ansible.buitlin.command: 'tailscale status'
+      register: tailscale_status
+
+    - ansible.builtin.command: 'tailscale login'
+      when: 'logged out' in tailscale_status.stdout

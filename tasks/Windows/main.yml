@@ -1,0 +1,389 @@
+---
+
+## pre-deploy task
+# get some special information about baseboard on host
+- block:
+    - windows.win.power_shell:
+        script: |
+          Get-WmiObject win32_baseboard | FL Manfucturer,Product,Model,Version,Status,SerialNumber
+      register: bboard_information
+
+    - ansible.builtin.set_fact:
+        bboard_manufacturer: bboard_information['Manufacturer']
+        bboard_product: bboard_information['Product']
+        bboard_model: bboard_information['Model']
+        bboard_version: bboard_information['Version']
+        bboard_status: bboard_information['Status']
+        bboard_serial: bboard_information['SerialNumber']
+  tags:
+    - system
+    - init
+
+- name: ensure local user accounts are deployed
+  ansible.windows.win_user:
+    name: {{ item.name }}
+    password: {{ lookup('community.general.onepassword', {{ pw_lookup }}) }}
+    state: present
+  ignore_errors: true
+
+
+- ansible.builtin.import_tasks:
+    file: {{ ansible_os_family }}/update.yml
+
+
+# @ToDo: implement webservice
+# the general idea is to provide some variables from a central service,
+# without the integrating of an asset-management system like GLPI
+- name: fetch additional information about the host
+  block:
+    - ansible.windows.win_get_url:
+        url: "https://{{ sysVarSrv }}/retrive?so={{ bboard_serial }}"
+        dest: "C:\Temp\ansiDeploy.json"
+
+    - ansible.builtin.set_fact:
+        sysVarSrv:          "{{ lookup('file', 'C:\Temp\ansiDeploy.json') | from_json }}"
+        sysVarSrv_origin:   "{{ sysVarSrv.origin }}"
+        1pwd_user:          "{{ sysVarSrv.vars.1pwd_user | default('') }}"
+        1pwd_secret:        "{{ sysVarSrv.vars.1pwd_secret | defaut('') }}"
+        1pwd_pass:          "{{ sysVarSrv.vars.1pwd_pass | default('') }}"
+        hostname:           "{{ sysVarSrv.vars.hostname | default('') }}"
+        deploy_mode:        "{{ sysVarSrv.vars.deployMode | default('local') }}"
+        deployStatus:       "{{ sysVarSrv.vars.deployStatus | default('active') }}"
+        fetchSystemUpdate:  "{{ sysVarSrv.vars.syspdate | defaut('True') }}"
+        licenseStore:       "{{ sysVarSrv.vars.licenseStore | default('1pwd') }}"
+        retrieveBackup:     "{{ sysVarSrv.vars.retriveBackup | default('False') }}"
+  tags:
+    - system
+    - init
+
+- name: modify the list of skiped playbook-tags
+  block:
+    - ansible.windows.win_environment:
+        name: 'ansiDeploySkip'
+        value: "{{ ansible_env['ansiDeploySkip'] }},update"
+        level: user
+      when: fetchSystemUpdate == False
+  tags:
+    - init
+
+# removing ScheduledTask for deploying after reboot
+- community.windows.win_scheduled_task:
+    name: "AnsiDeploy after reboot"
+    state: absent
+
+
+- name: ensure host has necessary powershell modules present
+  block:
+    - community.win.win_psmodule:
+        name: '{ item }'
+        state: present
+      loop:
+        - 'Evergreen'         # https://www.powershellgallery.com/packages/Evergreen
+        - 'PSWindowsUpdate'   # https://www.powershellgallery.com/packages/PSWindowsUpdate
+        - 'SMBIOS'            # https://www.powershellgallery.com/packages/SMBIOS
+        - 'psprivilege'       # https://www.powershellgallery.com/packages/psprivilege
+        - 'WinowsOSBuild'     # https://www.powershellgallery.com/packages/WindowsOSBuild
+        - 'Autologon'         # https://www.powershellgallery.com/packages/Autologon
+        - 'AdministratorRole' # https://www.powershellgallery.com/packages/AdministratorRole
+        - 'Add-HostFileEntry' # https://www.powershellgallery.com/packages/Add-HostFileEntry
+
+    - community.win.win_psmodule:
+        name: 'DellBIOSProvider'  # https://www.powershellgallery.com/packages/DellBIOSProvider
+        state: present
+      when: bboard_manufacturer == 'Dell'
+  tags:
+    - system
+    - powershell
+    - init
+
+
+- name: ensure all necessary scoop buckets are present on system
+  ansible.windows.win_powershell:
+    script: |
+      scoop bucket add {{ item }}
+  loop:
+    - 'extras'
+    - 'games'
+    - 'java'
+    - 'nirsoft'
+    - 'nonportable'
+    - 'sysinternals'
+    - 'versions'
+  tags:
+    - scoop
+    - system
+    - init
+  notify:
+    - 'update scoop database'
+
+
+- name: ensure scoop can process multipart downloads with aria2
+  block:
+    - community.windows.win_scoop:
+        name: 'aria2'
+        state: present
+      notify:
+        - 'configure aria2 in scoop'
+  tags:
+    - system
+    - scoop
+    - aria2
+
+
+- name: ensure access to 1password vault is granted
+  block:
+    - community.windows-win_scoop:
+        name: '1password-cli'
+        state: present
+      tags:
+        - scoop
+
+    - community.win.win_psmodule:
+        name: '1PWD'
+        state: present
+      tags:
+        - powershell
+
+    - windows.win_powershell:
+        script: |
+          $1pwdSignInAddress = 'https://my.1password.com'
+          $1pwdUser = '{{ 1pwd_user }}'
+          $1pwdSecret = '{{ 1pwd_secret }}'
+          $1pwdPass = '{{ 1pwd_pass }}'
+
+          $account = Test-1PasswordCredentials -SignInAddress $1pwdSignInAddress -SignInAccount $1pwd_user -SecretKey $1pwdSecret -MasterPassword $1pwd_pass
+
+          if ($account) {
+            Set-1PasswordConfiguration -Vault $accout.domain -SignInAddress $1pwdSignInAddress -SignInAccount $1pwd_user -SecretKey $1pwdSecret -MasterPassword $1pwd_pass
+          }
+      when: 1pwd_user is defined
+      tags:
+        - configuration
+  tags:
+    - 1password
+    - security
+
+
+- name: ensure hostname is set to  proper value
+  block:
+    - ansible.windows.win_hostname:
+        name: '{{ hostname }}'
+
+    - community.windows.win_scheduled_task:
+        name: "AnsiDeploy after reboot"
+        description: "Helper Task for (local) ansible deployments"
+        state: present
+        username: "{{ ansible_env['USERNAME'] }}"
+        actions:
+          - path: mobaxterm.exe
+            arguments: -exitwhendone -exec "ansible-pull -U {{ repo_url }} -i localhost --skip-tags {{ ansible_env['ansiDeploySkip'] }}"
+        triggers:
+          - type: boot
+      when: deploy_mode == "local"
+
+    - ansible.builtin.wait_for_connection:
+      when: deploy_mode != "local"
+  tags:
+    - system
+  notify:
+    - 'reboot machine'
+  when: hostname is defined
+
+
+- name: ensure all system updates and hotfix are enrolled
+  block:
+  tags:
+    - system
+    - update
+  notify:
+    - 'rebott machine'
+
+##
+# ensure communication tools are loaded
+- anible.builtin.import_tasks:
+    file: './{{ ansible_os_family }}/communication/{{ item }}.yml'
+  loop:
+    - ''
+  tags:
+    - communication
+
+# ensure development tasks are loaded
+- ansible.builtin.import_tasks:
+    file: './{{ ansible_os_family }}/dev/{{ item }}.yml'
+  loop:
+    - 'fork'
+  tags:
+    - development
+
+# loading tasks for multimedia options
+- ansible.builtin.import_tasks:
+    file: './{{ ansible_os_family }}/multimedia/{{ item }}.yml'
+  loop:
+    - 'cider'
+    - 'ffmpeg'
+  tags:
+    - multimedia
+
+# ensure network tools are loaded
+- ansible.builtin.import_tasks:
+    file: './{{ ansible_os_family }}/network/{{ item }}.yml'
+  loop:
+    - 'advanced-ip-scanner'
+  tags:
+    - network
+
+# ensure system tools are loaded
+- ansible.builtin.import_tasks:
+    file: './{{ ansible_os_family }}/system/{{ item }}.yml'
+  loop:
+    - 'concfg'
+    - 'etcher'
+    - 'ventoy'
+    - 'robobasket3'
+  tags:
+    - system
+
+# ensure util tools are loaded
+- ansible.builtin.import_tasks:
+    file: './{{ ansble_os_family }}/utils/{{ item }}.yml'
+  loop:
+    - 'caffeine'
+  tags:
+    - utils
+###
+
+- name: ensure aria and aria2-ng-gui are present on system
+  block:
+    - community.windows.win_scoop:
+        name: '{{ item }}'
+	      state: present
+      loop:
+        - 'aria2'
+	      - 'aria2-ng-gui'
+  tags:
+    - scoop
+    - aria2
+  notify:
+    - 'configure aria2 in scoop'
+
+
+# communication tools
+- name: ensure ferdium is present on system
+  block:
+    # check if ferdium is running and ask User(*) if Ferdium should be 
+    # terminated
+    # unfortunate MS has decided to send a RT == 0 also if the given processs
+    # is not existend
+    - windows.windows.win_powershell:
+        script: |
+            $interactive = "{{ interactive_updates | defaults(False) }}"
+
+            if (Get-Process *Ferdium*) {
+                if (interactive) {
+                  Add-Type-AssemblyNamePresentationFramework
+                  $msgBox = [System.Windows.MessageBox]::Show(
+                    'Ferdium is running and must be terminated befor updating. Do you want terminating?',
+                    'Ferdium auto-Update',
+                    'YesNo',
+                    'Error')
+
+                  switch ($msgBox) {
+                    'Yes' {
+                       taskkill /IM Ferdium /F
+                       scoop update ferdium-nightly
+                      }
+                    'No' {
+                      exit 0
+                      }
+                  }
+                }
+                taskkill /IM Ferdium /F
+                scoop update ferdium-nightly
+                exit $LASTEXITCODE
+            }
+      tags:
+        - scoop
+
+    - community.windows.win_scoop:
+        name: 'ferdium-nightly'
+	      state: present
+      tags:
+        - scoop
+
+    - community.windows.win_firewall_rule:
+        name: 'Allow Ferdium'
+	      programm: 'ferdium.exe'
+	      action: allow
+	      enabled: true
+	      state: present
+      tags:
+        - firewall
+
+    - windows.windows.win_powershell:
+        script: |
+          $list = scoop list | where {$_.Info -notcontains "Install failed"} | select -Property Name | Select-String -Pattern "ferdium-nightly"
+          $list -like "*ferdium*"
+        register: ferdium_install
+  failed_when:
+    - ferdium_install.host_out != 'True'
+  tags:
+    - ferdium
+    - communication
+
+
+# multimedia tools
+- name: ensure cider is present on system
+  block:
+    - community.windows.win_scoop:
+        name: 'cider'
+        state: present
+      tags:
+        - scopp
+
+    - commnity.windows.win_firewall_rule:
+        name: 'Allow Cider AppleMusic Client'
+	programm: 'cider.exe'
+	action: allow
+	enabled: true
+	state: present
+      tags:
+        - firewall
+  tags:
+    - cider
+    - applemusic
+    - multimedia
+
+
+- name: ensure ffmpeg is present on system
+  block:
+    - community.windows.win_scoop:
+        name: 'ffmpeg-gyan-nightly'
+	state: present
+      tags:
+        - scoop
+  tags:
+    - ffmpeg
+    - multimedia
+
+## post deploy tasks
+# a rock solid option is to retrieve an old backup, if this is a new machine
+# and there exists an "old" backup
+- name: retrive the latest backup for machine
+  block:
+    - ansible.windows.win_stat:
+        path: "{{ ansible_env['ProgramData'] }}\Bareos"
+      register: bareosData
+
+    # implementing the auto-retrieve of the latest snapshot 
+  tags:
+    - system
+    - backup
+  become: true
+  when: retrieveBackups
+
+
+- name: inform sysVarSrv that deploy is finished
+  ansible.windows.win_uri:
+    url: "https://{{ sysVarSrv_origin }}/machineStatus"
+    method: POST
+    body: "{ 'firstDeployStatus': 'finished' }"

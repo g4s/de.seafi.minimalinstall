@@ -1,0 +1,39 @@
+---
+
+- name: ensure RoboBasket3 is present on system
+  block:
+    # download latest stable version of RoboBasket
+    - ansible.windows.win_package:
+        path: 'https://www.robobasket.com/rbsetup.exe'
+        arguments: /LANG=de /CURRENTUSER /VERYSILENT /SUPPRESSMSGBOXES
+
+    # look for license in 1password
+    - ansible.win.win_shell:
+        script: |
+          $scriptdir = $ENV:USERPROFILE + "\Documents\WindowsPowerShell"
+          $configfile = $ENV:APPDATA + "\RoboBasket3\configdata.xml"
+
+          # stopping RoboBasket if running
+          $robobasket = Get-Process RoboBasket3 -ErrorAction SilentlyContinue
+          if ($robobasket) {
+            $robobasket | Stop-Process -Force
+          }
+          Remove-Variable robobasket
+
+          if (Get-Module -ListAvailable -Name 1PWD){
+            $licensekey = Invoke-1PasswordExpression "get item 'RoboBasket".details.fields | where-object {$_.designation -eq 'Lizenzschlüssel'} | select-object -property value).value
+            $licenseholder = Invoke-1PasswordExpression "get item 'RoboBasket".details.fields | where-object {$_.designation -eq 'Licensed for'} | select-object -property value).value
+
+            # modify RoboBasekt configuration
+            [xml]$config = Get-Content $configfile
+            $config.RBConfiguration.LicenseUser = $licenseholder
+            $config.RBConfiguration.TheCode = $licensekey
+            $config.RBConfiguration.AppMode = 2
+            $config.Save($configfile)
+          }
+
+          # restart RoboBasket
+          Start-Process 'C:\Programm files\RoboBasket3\RoboBasket3.exe'
+  tags:
+    - system
+    - robobasket

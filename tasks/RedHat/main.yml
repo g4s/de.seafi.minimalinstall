@@ -1,0 +1,20 @@
+---
+
+- name: aktivate epel
+  block:
+    - ansible.builtin.dnf:
+        name: 'epel-release'
+        state: present
+  become: true
+
+# including runtime installs and configurations
+- ansible.builtin.include_tasks:
+    file: 'runtimes/{{ item }}.yml'
+  loop:
+    - 'nodejs'
+    - 'go'
+    - 'python'
+
+# including minimal tool set on host
+- ansible.builtin.include_tasks:
+    file: 'tools.yml'

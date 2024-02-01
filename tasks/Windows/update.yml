@@ -1,0 +1,56 @@
+---
+
+- name: update packages with winget
+  ansible.windows.win_powershell:
+    script: |
+      winget upgrade --all --include-unknown
+  tags:
+    - update
+
+- name: update scoop-packages
+  block:
+    - ansible.windows.win_powershell:
+        script: |
+          (Get-LocalUser | where {$_.Enabled}).Name
+      register: localuser
+
+    - ansible.windows.win_powershell:
+        script: |
+          $errorActionPreference = "SilentlyContinue"
+
+          scoop update
+          $packages = scoop status
+
+          foreach ($pkg in $packages) {
+              if ($pkg.Info -like "*failed*"){
+                  Write-Host "reinstall" $pkg.Name
+                  try {
+                      scoop install $pkg.Name
+                  } catch {
+                      Write-Host "Hoppla! Da ist etwas schief gelaufen!"
+                  }
+              } else {
+                  Write-Host "Update Package $pkg.Name"
+                  switch($pkg.Name){
+                    "ferdium-nightly" {
+                      if (Get-Process -Name "ferdium"){
+                        taskkill /IM ferdium /F
+                      }
+                    }
+                    "google-chrome" {
+                      if (Get-Process -Name "chrome") {
+                        taskkill /IM chrome /F
+                      }
+                   }
+                   Default {
+                     if (Get-Process -Name $pkg.Name) {
+                       taskkill /IM $pkg.Name /F
+                     }
+                    }
+                  }
+
+                scoop update $pkg.Name
+              } 
+            }                                        
+      become_user: {{ item  }}
+      loop: localuser
