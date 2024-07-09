@@ -20,15 +20,24 @@
         - 'system.sh'
   when: ansible_os_family != 'Windows'
 
+- name: ensure hostname is set
+  block:
+    - ansible.builtin.hostname: {{ hostname | default('machine001')}}
+      when: ansible_os_family != 'Windows'
+
+- name: ensure system has latest pci-IDs
+  ansible.builtin.command: 'update-pciids'
+  when: ansible_os_family != 'Windows'
+
 - ansible.builtin.include_tasks:
     file: './tasks/{{ ansible_os_family }}/main.yml'
 
-# install mergeFS --> https://github.com/trapexit/mergerfs
+# @ToDo install mergeFS --> https://github.com/trapexit/mergerfs
 
-- name: ensure tailscale is up and running
+- name: configure ntp
   block:
-    - ansible.buitlin.command: 'tailscale status'
-      register: tailscale_status
-
-    - ansible.builtin.command: 'tailscale login'
-      when: 'logged out' in tailscale_status.stdout
+    - ansible.builtin.template:
+        src: ntp.conf.j2
+        dest: /etc/ntp.conf
+      when: ansible_os_family != 'Windows'
+  when: ntp_server is defined

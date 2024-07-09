@@ -18,3 +18,10 @@
 # including minimal tool set on host
 - ansible.builtin.include_tasks:
     file: 'tools.yml'
+
+- name: chrony is installed
+  ansible.builtin.dnf:
+    name: 'chrony'
+    state: latest
+  tags:
+    - ntp
