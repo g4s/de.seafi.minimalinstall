@@ -7,6 +7,9 @@
         state: present
   become: true
 
+- name: enable yux/networking repo
+  ansible.builtin.command: "dnf copr enable -y yux/networking"
+
 # including runtime installs and configurations
 - ansible.builtin.include_tasks:
     file: 'runtimes/{{ item }}.yml'
