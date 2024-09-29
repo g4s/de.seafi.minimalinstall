@@ -17,3 +17,12 @@
     - 'ncdu'
     - 'lshw'
   become: true
+
+- name: ensure flexihub is present o system
+  block:
+    - ansible.builtin.set_facts:
+        flexispot_rpm: "https://cdn.electronic.us/products/flexihub/linux/download/flexihub.x86_64-2.rpm"
+
+    - ansible.builtin.dnf:
+        name: "{{ flexispot_rpm }}"
+        state: present
