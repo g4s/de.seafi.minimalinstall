@@ -26,3 +26,13 @@
     - ansible.builtin.dnf:
         name: "{{ flexispot_rpm }}"
         state: present
+
+
+- name: ensure SEH UTN manager is present on system
+  block:
+    - ansible.builtin.set_facts:
+        utnmanager_rpm: "https://www.seh-technology.com/fileadmin/user/downloads/deviceserver/tools/sehutnmanager-rpm_linux_64bit-4.0.7.zip"
+
+    - ansible.builtin.dnf:
+        name: "{{ utnmanager_rpm }}"
+        state: present
