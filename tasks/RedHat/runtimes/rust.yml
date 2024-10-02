@@ -1,0 +1,6 @@
+---
+
+- ansible.builtin.dnf:
+    name: rust 
+    state: latest
+    
