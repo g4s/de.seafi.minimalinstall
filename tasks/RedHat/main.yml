@@ -7,8 +7,15 @@
         state: present
   become: true
 
-- name: enable yux/networking repo
+- name: enable yum/networking repo
   ansible.builtin.command: "dnf copr enable -y yux/networking"
+
+- name: ensure vm-guest tools are present if necessary
+  block: 
+    - ansible,builtin.dnf:
+        name: open-vm-tools
+        state: latest
+      when: "'Vmware' in ansible_system_vendor"
 
 # including runtime installs and configurations
 - ansible.builtin.include_tasks:
