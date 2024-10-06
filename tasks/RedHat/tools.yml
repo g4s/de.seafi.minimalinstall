@@ -17,6 +17,7 @@
     - 'ncdu'
     - 'lshw'
     - 'rclone'
+    - 'age'
   become: true
 
 

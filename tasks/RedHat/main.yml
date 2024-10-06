@@ -22,6 +22,17 @@
         state: latest
       when: "'Vmware' in ansible_system_vendor"
 
+- name: ensure development tools are present on system
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - "@Development Tools"
+    - "procps-ng"
+    - "curl"
+    - "file"
+    - "git"
+
 # including runtime installs and configurations
 - ansible.builtin.include_tasks:
     file: 'runtimes/{{ item }}.yml'
