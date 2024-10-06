@@ -18,6 +18,7 @@
     - 'lshw'
   become: true
 
+
 - name: ensure flexihub is present o system
   block:
     - ansible.builtin.set_facts:
@@ -26,6 +27,7 @@
     - ansible.builtin.dnf:
         name: "{{ flexispot_rpm }}"
         state: present
+  when: "usbtools" in pckgs
 
 
 - name: ensure SEH UTN manager is present on system
@@ -36,3 +38,4 @@
     - ansible.builtin.dnf:
         name: "{{ utnmanager_rpm }}"
         state: present
+  when: "usbtools" in pckgs
