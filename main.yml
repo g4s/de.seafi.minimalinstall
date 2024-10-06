@@ -35,10 +35,5 @@
 - ansible.builtin.include_role:
     name: de.seafi.tailscale
 
-- name: configure ntp
-  block:
-    - ansible.builtin.template:
-        src: ntp.conf.j2
-        dest: /etc/ntp.conf
-      when: ansible_os_family != 'Windows'
-  when: ntp_server is defined
+- ansible.builtin.include_tasks:
+    file: "./tasks/ntp.yml"

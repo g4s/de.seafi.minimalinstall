@@ -1,0 +1,9 @@
+---
+
+- name: configure ntp
+  block:
+    - ansible.builtin.template:
+        src: ntp.conf.j2
+        dest: /etc/ntp.conf
+      when: ansible_os_family != 'Windows'
+  when: ntp_server is defined
