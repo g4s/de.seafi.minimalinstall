@@ -1,6 +1,11 @@
 ---
 
-- name: aktivate epel
+- name: ensure dnf core plugins are present on system
+  ansible.builtin.dnf:
+    name: dnf-plugins-core
+    state: latest
+
+- name: ensure epel is present on system
   block:
     - ansible.builtin.dnf:
         name: 'epel-release'
@@ -36,3 +41,18 @@
     state: latest
   tags:
     - ntp
+
+- name: ensure mergerfs is present on system
+  block:
+    - community.general.github_release:
+        user: trapexit
+        repo: mergerfs
+      register: release
+
+    - ansible.builtin.set_facts:
+        basurl: https://github.com/trapexit/mergerfs/releases/download/2.40.2/mergerfs-2.40.2-1.fc40.x86_64.rpm
+        releaseurl: "{{ baseurl }}/{{ release.tag }}/mergerfs-{{ release.tag }}-1.fc40.{{ ansible_architecture }}.rpm"
+
+    - ansible.builtin.dnf:
+        name: "{{ releaseurl }}"
+        state: present

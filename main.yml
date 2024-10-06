@@ -32,7 +32,8 @@
 - ansible.builtin.include_tasks:
     file: './tasks/{{ ansible_os_family }}/main.yml'
 
-# @ToDo install mergeFS --> https://github.com/trapexit/mergerfs
+- ansible.builtin.include_role:
+    name: de.seafi.tailscale
 
 - name: configure ntp
   block:
