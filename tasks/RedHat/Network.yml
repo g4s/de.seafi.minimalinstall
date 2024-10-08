@@ -1,0 +1,37 @@
+---
+
+- name: ensure NetworkManager is present on system
+  ansible.builtin.dnf:
+    name: NetworkManager
+    state: latest
+
+- name: reconfigure DNS on system (use dnsmasq in NetworkManager)
+  block:
+    - ansible.builtin.command: "systemctl disable --now systemd-resolved"
+
+    - ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+
+    - ansible.builtin.temolate:
+        src: network/nm-dnsmasq.conf.j2
+        dest: /etc/NetworkManager/conf.d/00-use-dnsmasq.conf
+
+    - ansible.builtin.template:
+        src: network/dnsmasq-upstream.conf.j2
+        dest: /etc/NetworkManager/dnsmasq.d/00-upstream.conf
+
+    # fetch additional configs from remote
+    # url are defined as a list hash-map, defined in var dnsconfig:
+    # { 'filename': '', 'url': '' }
+    - ansible.builtin.get_url:
+        src: {{ item.url }}
+        dest: "/etc/NetworkManager/dnsmasq.d/{{ item.filename }}"
+      loop: dnsconfigs
+
+    - ansible.builtin.template:
+        src: network/dnsmasq-addhosts.conf.j2
+        dest: /etc/NetworkManager/dnsmasq.d/02-addhosts.conf
+  notify:
+    - execute etckeeper
+    - restart network-manager

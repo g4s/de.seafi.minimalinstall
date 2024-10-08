@@ -1,0 +1,16 @@
+---
+
+- name: execute etckeeper
+  block:
+    - ansible.builtin.command: "command -v etckeeper"
+      register: cmd
+
+    - ansible.builtin.command: "etckeeper commit 'ansible managed commit'"
+      arg:
+        chdir: '/etc'
+      when: cmd.rc == 0
+
+- name: restart-networkmanager
+  ansible.builtin.systemd:
+    name: network-manager
+    state: restarted
