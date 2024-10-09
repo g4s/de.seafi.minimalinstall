@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD 3-Clause Revised
+#
+# author: Gregor A. Segner
 ---
 
 # ensure additional bash functions are available on *nix systems
