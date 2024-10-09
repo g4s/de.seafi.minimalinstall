@@ -1,19 +1,26 @@
 ---
 
-- name: ensure dnf core plugins are present on system
-  ansible.builtin.dnf:
-    name: dnf-plugins-core
-    state: latest
-
-- name: ensure epel is present on system
+- name: ensure additional repos & dnf-plugins-core are present on system
   block:
     - ansible.builtin.dnf:
-        name: 'epel-release'
+        name: "{{ item }}"
         state: present
-  become: true
+      loop:
+        - "dnf-plugins-core"
+        - "epel-release"
 
-- name: enable yum/networking repo
-  ansible.builtin.command: "dnf copr enable -y yux/networking"
+    - ansible.builtin.set_facts:
+        copr_repos:
+          - "yux/networking"
+
+    # add Fedora specific COPR-repos
+    - ansible.builtin.set_facts:
+        copr_repos: "{{ copr_repos + ['nucleo/gocryptfs'] }}"
+      when: ansible_distribution == "Fedora"
+
+    # enabling COPR-Repos
+    - ansible.builtin.command: "dnf copr enable -y {{ item }}"
+      loop: copr_repos
 
 - name: ensure vm-guest tools are present if necessary
   block: 

@@ -1,0 +1,9 @@
+---
+
+- name: ensure crypto software is present on system 
+  ansible.builtin.dnf:
+    name: {{ item }}
+    state: present
+  loop:
+    - "age"
+    - "gocryptfs"
