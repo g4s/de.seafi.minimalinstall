@@ -40,3 +40,11 @@
 
 - ansible.builtin.include_tasks:
     file: "./tasks/ntp.yml"
+
+# initiate new user home on first login
+- ansible.builtin.template:
+    src: "initiate-user.sh"
+    dest: "/etc/profile.d/initiate-user.sh"
+    owner: root
+    group: root
+    mode: 0755
