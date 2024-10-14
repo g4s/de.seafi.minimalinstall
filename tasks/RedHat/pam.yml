@@ -1,0 +1,11 @@
+---
+
+- name: ensure PAM-modules are present on system
+  ansible.builtin.dnf:
+    name: {{ item }}
+    state: latest
+  loop:
+    - "pam_mount"
+    - "pam_passwordqc"
+    - "pam_ssh"
+    - "google-authentificator"
