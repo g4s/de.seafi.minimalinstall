@@ -43,7 +43,7 @@
 
 # initiate new user home on first login
 - ansible.builtin.template:
-    src: "initiate-user.sh"
+    src: "profile.d/00-initiate-user.sh"
     dest: "/etc/profile.d/initiate-user.sh"
     owner: root
     group: root
