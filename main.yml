@@ -49,3 +49,12 @@
     group: root
     mode: 0755
   when: ansible_os_family != "Windows"
+
+- name: ensure user get there own tmo-dir
+  ansible.builtin.template:
+    src: "profile.d/01-createtemp.sh"
+    dest: "/etc/profile.d/01-createtemp.sh"
+    group: root
+    owner: root
+    mode: 0755
+  when: ansible_os_family != "Windows"
