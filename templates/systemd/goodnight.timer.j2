@@ -1,0 +1,9 @@
+[Unit]
+Description=Schedule goodnight execution dail at {{ goodnight_time }}
+
+[Timer]
+OnCalendar=*-*-* {{ godnight_time }}
+Unit=goodnight.service
+
+[Install]
+WantedBy=default.target

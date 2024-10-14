@@ -1,0 +1,9 @@
+[Unit]
+Description=trigger goodnight action on host
+After=default.target
+Wants=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/goodnight
+Environment=WAKEUP={{ wakeup_time | default('07:00') }}
