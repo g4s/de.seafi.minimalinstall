@@ -1,0 +1,13 @@
+---
+
+- name: ensure all Apple patchs are deployed
+  block:
+    - ansible.builtin.command: "softwareupdate --install --all"
+
+- name: ensure all AppStore Applications are up to date
+  ansible.builtin.command: "mas upgrade"
+
+- name: ensure all homebrew applications are up to date
+  community.general.homebrew:
+    update_homebrew: true
+    upgrade_all: true

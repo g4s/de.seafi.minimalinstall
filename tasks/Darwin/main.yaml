@@ -7,12 +7,15 @@
 - ansible.builtin.include_file:
     name: "{{ ansible_os_family }}/updates.yaml"
 
+- ansible.builtin.inlclude_file:
+    name: "{{ absible_os_family}}/tools"
 
-
-
-
-- name: ensure brew applications are updated
+- name: ensure Amethyst window manager is present on system
   community.general.homebrew:
-    update_homebrew: true
-    upgrade_all: true
+    name: "amethyst"
+    state: latest
 
+- name: ensure ShortCat keyboard enchancements are present on system
+  community.general.homebrew:
+    name: "shortcat"
+    state: latest

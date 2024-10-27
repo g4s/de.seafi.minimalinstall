@@ -8,6 +8,7 @@
   loop:
     - 'tmux'
     - 'reptyr'
+    - 'resty'
     - 'vim'
     - 'pv'
     - 'p7zip'

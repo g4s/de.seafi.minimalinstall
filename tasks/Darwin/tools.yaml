@@ -1,0 +1,17 @@
+---
+
+- name: ensure {{ item }} is present on system
+  community.general.homebrew:
+    name: {{ item }}
+    state: latest
+  loop:
+    - "tmux"
+    - "resty"
+    - "vim"
+    - "pv"
+    - "p7zip"
+    - "wget"
+    - "ncdu"
+    - "rclone"
+    - "age"
+    - "iterm2"
