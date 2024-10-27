@@ -1,0 +1,18 @@
+# macOS specific configurations
+---
+
+- ansible.builtin.inlcude_file:
+    name: "{{ ansible_os_family }}/prequesites.yaml"
+
+- ansible.builtin.include_file:
+    name: "{{ ansible_os_family }}/updates.yaml"
+
+
+
+
+
+- name: ensure brew applications are updated
+  community.general.homebrew:
+    update_homebrew: true
+    upgrade_all: true
+

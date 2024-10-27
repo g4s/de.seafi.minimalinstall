@@ -1,0 +1,18 @@
+---
+
+- ansible.builtin.command: "xcode-select --install"
+
+- block:
+    - ansible.builtin.command: "command -v brew"
+      register: brew
+
+    - name: ensure homebrew is present on system
+      ansible.builtin.shell:
+        cmd: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      when: brew.rc != 0
+
+- name: ensure latest version of AppStore CLI tools are present on host
+  community.general.homebrew:
+    name: mas
+    state: latest
