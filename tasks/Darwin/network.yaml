@@ -7,3 +7,6 @@
 
 - name: ensure wireguard client is present on system
   ansible.builtin.command: "mas install 1451685025"
+
+- name: ensure tailscale client is present on system
+  ansible.builtin.command: "mas install 1475387142"
