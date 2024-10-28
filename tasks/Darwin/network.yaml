@@ -1,0 +1,6 @@
+---
+
+- name: ensure sshuttle is present on system
+  community.general.homebrew:
+    name: "sshuttle"
+    state: latest
