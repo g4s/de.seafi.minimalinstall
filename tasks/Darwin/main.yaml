@@ -19,3 +19,6 @@
   community.general.homebrew:
     name: "shortcat"
     state: latest
+
+- ansible.builtin.include_files:
+    name: "{{ ansible_os_family }}/network.yaml"
