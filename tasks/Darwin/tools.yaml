@@ -14,4 +14,5 @@
     - "ncdu"
     - "rclone"
     - "age"
-    - "iterm2"
+    - "iterm2falk"
+    - "default-handler"
