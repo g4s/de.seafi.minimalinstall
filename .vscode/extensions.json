@@ -17,6 +17,8 @@
         "ms-python.debugpy",
         "tabbyml.vscode-tabby",
         "editorconfig.editorconfig",
-        "gruntfuggly.todo-tree"
+        "gruntfuggly.todo-tree",
+        "redhat.vscode-yaml",
+        "kennylong.kubernetes-yaml-formatter"
     ]
 }
