@@ -1,0 +1,22 @@
+{
+    "recommendations": [
+        "ms-vscode.powershell",
+        "ms-python.python",
+        "ms-vscode-remote.remote-ssh",
+        "redhat.ansible",
+        "coscreen-inc.coscreen-vsc-extension",
+        "deerawan.vscode-dash",
+        "jetpack-io.devbox",
+        "mhutchie.git-graph",
+        "github.codespaces",
+        "gitpod.gitpod-desktop",
+        "eriklynd.json-tools",
+        "jebbs.plantuml",
+        "mebrahtom.plantumlpreviewer",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "tabbyml.vscode-tabby",
+        "editorconfig.editorconfig",
+        "gruntfuggly.todo-tree"
+    ]
+}
