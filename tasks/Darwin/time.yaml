@@ -1,0 +1,27 @@
+---
+
+- name: setting up time configuration
+  ansible.builtin.shell: |
+    CUR_TZONE=$(/usr/bin/systemsetup -gettimezone)
+    CUR_NETSTAT=$(/usr/bin/systemsetup -getusingnetworktime)
+
+    if [[ ${CUR_TZONE} != {{ TZONE | default('Europe/Berlin', true) }} ]]; then
+      echo "setting timezon to {{ TZONE | default('Europe/Berlin') }}"
+      /usr/bin/systemsetup -settimezone {{ TZONE | default('Europe/Berlin', true) }}
+    fi
+
+    # ensure network time is proper configured
+    echo "configure networktime"
+    if [[ ${CUR_NETSTAT} == "off" ]]; then
+      echo "activating network time"
+      /usr/bin/systemsetup -setusingnetworktime on
+    fi
+
+    TSERVER=$(/usr/bin/systemsetup -getnetworktimeserver)
+    if [[ ${TSERVER} != {{ TIMESERVER | default('time.fu-berlin.de.', true) }} ]]; then
+      echo "setting time server to {{ TIMESERVER | default('time.fu-berlin.de', true) }}"
+      /usr/bin/systemsetup -setnetworktimeserver {{ TIMESERVER | default('time.fu-berlin.de', true) }}
+    fi
+  become: true
+  tags:
+  - time

@@ -6,44 +6,48 @@
 # ensure additional bash functions are available on *nix systems
 - name: ensure additional bash functions are present
   block:
-    - ansible.builtin.file:
-        path: '/usr/local/lib/bash'
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
+  - ansible.builtin.file:
+      path: '/usr/local/lib/bash'
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
 
-    - ansible.builtin.get_url:
-        url: 'https://raw.githubusercontent.com/g4s/collecction/master/nix/lib/{{ item }}'
-        dest: '/usr/local/lib/bash/{{ item }}'
-        owner: root
-        group: root
-        mode: '0755'
-      loop:
-        - 'system.sh'
+  - ansible.builtin.get_url:
+      url: 'https://raw.githubusercontent.com/g4s/collecction/master/nix/lib/{{ item }}'
+      dest: '/usr/local/lib/bash/{{ item }}'
+      owner: root
+      group: root
+      mode: '0755'
+    loop:
+    - 'system.sh'
   when: ansible_os_family != 'Windows'
 
 - name: ensure hostname is set
   block:
-    - ansible.builtin.hostname: {{ hostname | default('machine001') }}
-      when: ( ansible_os_family != 'Windows' ) and
-            ( ansible_os_family != "Darwin" )
-    
-    - ansible.builtin.command: "scutil --set {{ hostname | default('machine001') }}"
-      when: ( ansible_os_family == 'Darwin' )
+  - ansible.builtin.hostname: { ? { hostname | default('machine001') } }
+    when: ( ansible_os_family != 'Windows' ) and ( ansible_os_family != "Darwin" )
 
-    # windows requires reboot for setting a hostname
-    - ansible.windows.win_hostname:
-        name: "{{ hostname | default('machine001') }}"
-      when: ( ansible_os_family == 'Windows')
-      notify:
-        - reboot machine
+  - ansible.builtin.command: "scutil --set {{ hostname | default('machine001') }}"
+    when: ( ansible_os_family == 'Darwin' )
+
+  # windows requires reboot for setting a hostname
+  - ansible.windows.win_hostname:
+      name: "{{ hostname | default('machine001') }}"
+    when: ( ansible_os_family == 'Windows')
+    notify:
+    - reboot machine
   become: true
+  tags:
+  - machine_setup
 
 - name: ensure system has latest pci-IDs
   ansible.builtin.command: 'update-pciids'
-  when: ansible_os_family != 'Windows'
+  when: ( ansible_os_family != 'Windows' ) and ( ansible_os_family != 'Darwin' )
+  tags:
+  - machine_setup
 
+# loading os family specific tasks
 - ansible.builtin.include_tasks:
     file: './tasks/{{ ansible_os_family }}/main.yml'
 
@@ -59,40 +63,40 @@
     dest: "/etc/profile.d/initiate-user.sh"
     owner: root
     group: root
-    mode: 0755
+    mode: 755
   when: ansible_os_family != "Windows"
 
-- name: ensure user get there own tmo-dir
+- name: ensure user get there own tmp-dir
   ansible.builtin.template:
     src: "profile.d/01-createtemp.sh"
     dest: "/etc/profile.d/01-createtemp.sh"
     group: root
     owner: root
-    mode: 0755
+    mode: 755
   when: ansible_os_family != "Windows"
 
 - name: ensure goodnight-script is present on host
   block:
-    - ansible.builtin.set_facts:
-        goodnight_time: 22:00:00
+  - ansible.builtin.set_facts:
+      goodnight_time: 22:00:00
 
-    - ansible.builtin.copy:
-        src: "goodnight.py"
-        dest: "/usr/bin/goodnight"
-        mode: 0750
-        owner: root
-        group: root
+  - ansible.builtin.copy:
+      src: "goodnight.py"
+      dest: "/usr/bin/goodnight"
+      mode: 750
+      owner: root
+      group: root
 
-    - ansible.builtin.template:
-        src: "systemd/goodninght.service.j2"
-        dest: "/etc/systemd/system/goodnight.service"
-        mode: 0750
-        owner: root
-        group: root
+  - ansible.builtin.template:
+      src: "systemd/goodninght.service.j2"
+      dest: "/etc/systemd/system/goodnight.service"
+      mode: 750
+      owner: root
+      group: root
 
-    - ansible.builtin.template:
-        src: "systemd/goodnight.timer.j2"
-        dest: "/etc/systemd/system/goodnight.service"
-        mode: 0750
-        owner: root
-        group: root
+  - ansible.builtin.template:
+      src: "systemd/goodnight.timer.j2"
+      dest: "/etc/systemd/system/goodnight.service"
+      mode: 750
+      owner: root
+      group: root
