@@ -25,7 +25,7 @@
 
 - name: ensure hostname is set
   block:
-  - ansible.builtin.hostname: { ? { hostname | default('machine001') } }
+  - ansible.builtin.hostname: "{{ hostname | default('machine001') }}"
     when: ( ansible_os_family != 'Windows' ) and ( ansible_os_family != "Darwin" )
 
   - ansible.builtin.command: "scutil --set {{ hostname | default('machine001') }}"
