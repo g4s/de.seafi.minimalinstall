@@ -28,9 +28,6 @@
   - ansible.builtin.hostname: "{{ hostname | default('machine001') }}"
     when: ( ansible_os_family != 'Windows' ) and ( ansible_os_family != "Darwin" )
 
-  - ansible.builtin.command: "scutil --set {{ hostname | default('machine001') }}"
-    when: ( ansible_os_family == 'Darwin' )
-
   # windows requires reboot for setting a hostname
   - ansible.windows.win_hostname:
       name: "{{ hostname | default('machine001') }}"
