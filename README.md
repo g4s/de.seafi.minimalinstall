@@ -8,9 +8,10 @@ ansible-role for deploying a baselining on fresh installed machines.
 
 ## Role Vars
 
-| Var        | default value      | description                          |
-|--------------|--------------------|--------------------------------------|
+| Var              | default value      | description                          |
+|------------------|--------------------|--------------------------------------|
 | ansible_user     |                    | ansible management user              |
 | ansible_user_pwd |                    | ansible user password                |
+| vnc_pwd          |                    | on macos: setting VNC password       |
 | TZONE            | 'Europe/Berlin'    | Time zone which should be configured |
 | TIMESERVER       | 'time.fu-berlin.de | Timeserver for synchro               | 
