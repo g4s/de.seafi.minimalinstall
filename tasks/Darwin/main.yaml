@@ -1,56 +1,50 @@
 # macOS specific configurations
 ---
 
+- name: retrieve macOS version from host
+  ansible.builtin.command: "sw_version --productVersion"
+  register: macos_version
+
 - name: setting hostname
   ansible.builtin.command: "scutil --set {{ hostname | default('machine001') }}"
   become: true
   tags:
-      - machine_setup
+        - machine_setup
 
 - ansible.builtin.include_file:
-        name: "{{ ansible_os_family }}/time.yaml"
+          name: "{{ ansible_os_family }}/time.yaml"
 
 - name: ensure management user is present on system
   ansible.builtin.shell: |
-        adminctl -addUser {{ ansible_user }} \
-              -password {{ ansible_user_pwd }}
+          adminctl -addUser {{ ansible_user }} \
+                -password {{ ansible_user_pwd }}
   become: true
   tags:
-      - machine_setup
-      - user_management
+        - machine_setup
+        - user_management
 
 - name: ensure remote control is activated
   ansible.builtin.shell: |
-        kickstart="/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart"
+          kickstart="/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart"
 
-        ${kickstart} -configure -allowAccessFor -allUsers -privs -all
-        ${kickstart} -configure -clientopts -setvnclegacy -vnclegacy yes
-        ${kickstart} -configure -clientopts -setvncpw -vncpw {{ vnc_pwd }}
-        ${kickstart} -restart -agent -console
-        ${kickstart} -activate
+          ${kickstart} -configure -allowAccessFor -allUsers -privs -all
+          ${kickstart} -configure -clientopts -setvnclegacy -vnclegacy yes
+          ${kickstart} -configure -clientopts -setvncpw -vncpw {{ vnc_pwd }}
+          ${kickstart} -restart -agent -console
+          ${kickstart} -activate
   become: true
   tags:
-      - machine_setup
-      - remotesetup
+        - machine_setup
+        - remotesetup
 
 - ansible.builtin.inlcude_file:
-        name: "{{ ansible_os_family }}/prequesites.yaml"
+          name: "{{ ansible_os_family }}/prequesites.yaml"
 
 - ansible.builtin.include_file:
-        name: "{{ ansible_os_family }}/updates.yaml"
+          name: "{{ ansible_os_family }}/updates.yaml"
 
 - ansible.builtin.inlclude_file:
-        name: "{{ absible_os_family}}/tools"
-
-- name: ensure Amethyst window manager is present on system
-  community.general.homebrew:
-        name: "amethyst"
-        state: latest
-
-- name: ensure ShortCat keyboard enchancements are present on system
-  community.general.homebrew:
-        name: "shortcat"
-        state: latest
+          name: "{{ absible_os_family}}/tools"
 
 - ansible.builtin.include_files:
-        name: "{{ ansible_os_family }}/network.yaml"
+          name: "{{ ansible_os_family }}/network.yaml"

@@ -2,7 +2,7 @@
 
 - name: ensure {{ item }} is present on system
   community.general.homebrew:
-    name: { ? { item } }
+    name: "{{ item }}"
     state: latest
   loop:
   - "tmux"
@@ -24,7 +24,6 @@
   - "ncurses"
   - "readline"
   - "ruby"
-  - "sshuttle"
   - "utf8proc"
   - "wget"
   - "xz"
@@ -36,26 +35,13 @@
   - "lz4"
   - "ncdu"
   - "openssl"
-  - "pv"
-  - "rclone"
-  - "resty"
   - "sqlite"
-  - "tmux"
   - "wireguard-go"
-  - "teleport"
-  - "teleport-connect"
   - zstd
   - "iterm2"
   - "obsidian"
-  - "orbstack"
-  - "shadow"
-  - "vmware-fusion"
-  - "x2goclient"
   - "firefox"
   - "google-chrome"
-  - "omnissa-horizion-client"
   - "raindropio"
-  - "utm"
-  - "xpra"
   - "gettext"
   - "asdf"
