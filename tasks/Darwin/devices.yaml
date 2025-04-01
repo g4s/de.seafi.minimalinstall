@@ -1,0 +1,36 @@
+---
+
+- name: ensure UTN-Manager is present on host
+  block:
+  - ansible.builtin.unarchive:
+      src: "{{ seh_base_url }}/deviceserver/tools/sehutnmanager-mac-{{ utnmanager_ver }}.zip"
+      dest: /tmp
+      remote_src: true
+
+  - ansible.builtin.command: "installer -pkg sehutnmanager-mac-{{ utnmanager_ver }} -target /"
+    args:
+      chdir: "/tmp/sehutnmanager-mac-{{ utnmanager_ver }}/"
+    become: true
+  tags:
+  - utnmanager
+  - remote-usb
+
+- name: ensure flexihub is present on host
+  block:
+  - ansible.builtin.get_url:
+      url: "https://cdn.electronic.us/products/flexihub/mac/download/flexihub.dmg"
+      dest: "/tmp"
+
+  - ansible.builtin.command: "hdiutil attach flexihub.dmg"
+    args:
+      chdir: "/tmp"
+
+  - ansible.builtin.command: "cp -rF Flexihub.app /Applications"
+    args:
+      chdir: /Volumes/Flexihub
+
+  - ansible.builtin.command: "hdutil detach /Volumes/Flexihub"
+    become: true
+  tags:
+  - remote-usb
+  - flexihub
