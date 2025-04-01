@@ -34,3 +34,22 @@
   tags:
   - remote-usb
   - flexihub
+
+- name: ensure virtualhere is present on system
+  block:
+  # first we check, if system is running inside a vm
+  - ansible.builtin.command: "sysctl kern.hv_vmm_present"
+    register: vmm_present
+
+  - community.general.homebrew:
+      name: "virtualhere"
+      state: latest
+
+  # installing virtualhere server if not running on hypervisor
+  - community.general.homebrew:
+      name: "virtualhereserver"
+      state: latest
+    when: vmm_present.stdout is search("0")
+  tags:
+  - remote-usb
+  - virtualhere
