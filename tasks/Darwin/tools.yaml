@@ -28,7 +28,6 @@
   - "wget"
   - "xz"
   - "argon2"
-  - "flux"
   - "libevent"
   - "libsodium"
   - "libyaml"
