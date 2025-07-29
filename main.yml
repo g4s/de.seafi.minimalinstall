@@ -99,3 +99,5 @@
       mode: 750
       owner: root
       group: root
+  tags:
+  - goodnight
