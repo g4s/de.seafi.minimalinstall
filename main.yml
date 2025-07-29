@@ -50,6 +50,8 @@
 
 - ansible.builtin.include_role:
     name: de.seafi.tailscale
+  tags:
+  - vpn
 
 - ansible.builtin.include_tasks:
     file: "./tasks/ntp.yml"
