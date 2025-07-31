@@ -17,7 +17,13 @@
   - 'ncdu'
   - 'lshw'
   - 'rclone'
+  - 'fuse'
   - 'age'
+  - 'mc'
+  - 'bash-completion'
+  - 'jq'
+  - 'yq'
+  - 'ripgrep'
   become: true
 
 - name: ensure flexihub is present on system

@@ -39,6 +39,7 @@
   - "curl"
   - "file"
   - "git"
+  - "gh"
 
 # including runtime installs and configurations
 - ansible.builtin.include_tasks:
@@ -52,6 +53,17 @@
 # including minimal tool set on host
 - ansible.builtin.include_tasks:
     file: 'tools.yml'
+
+- name: ensure ssh and related tools are present on system
+  block:
+  - ansible.builtin.dnf:
+      name: '{{ item }}'
+      state: latest
+    loop:
+    - 'mosh'
+
+  - anisble.builtin.command: 'cargo install fast-ssh'
+  become: true
 
 - name: chrony is installed
   ansible.builtin.dnf:
