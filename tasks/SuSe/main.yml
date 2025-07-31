@@ -1,0 +1,5 @@
+---
+
+- name: update all packages
+  ansible.builtin.command: "zypper refresh && zypper update -y"
+  become: true

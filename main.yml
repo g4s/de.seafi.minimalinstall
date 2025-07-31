@@ -3,6 +3,24 @@
 # author: Gregor A. Segner
 ---
 
+# ensure correct os family is set
+- ansible.builtin.set_facts: ansible_os_family = "SuSe"
+  when: (ansible_os_family | search("SUSE LINUX")) or (ansible_os_family | search("openSUSE Leap"))
+
+# ensure we detect WSL-machines
+- block:
+  - ansible.builtin.stat:
+      path: "/proc/sys/fs/binfmt_misc/WSLInterop"
+    register: wsldetect
+
+  - ansible.builtin.set_facts:
+      wslmachine: True
+    when: wsldetect.stat.exists
+
+  - ansible.builtin.set_facts:
+      wslmachine: False
+    when: not wsldetect.stat.exists
+
 # ensure additional bash functions are available on *nix systems
 - name: ensure additional bash functions are present
   block:

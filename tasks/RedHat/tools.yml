@@ -6,39 +6,36 @@
     name: '{{ item }}'
     state: latest
   loop:
-    - 'tmux'
-    - 'reptyr'
-    - 'resty'
-    - 'vim'
-    - 'pv'
-    - 'p7zip'
-    - 'p7zip-plugins'
-    - 'dmg2img'
-    - 'wget'
-    - 'ncdu'
-    - 'lshw'
-    - 'rclone'
-    - 'age'
+  - 'tmux'
+  - 'reptyr'
+  - 'vim'
+  - 'pv'
+  - 'p7zip'
+  - 'p7zip-plugins'
+  - 'dmg2img'
+  - 'wget'
+  - 'ncdu'
+  - 'lshw'
+  - 'rclone'
+  - 'age'
   become: true
 
-
-- name: ensure flexihub is present o system
+- name: ensure flexihub is present on system
   block:
-    - ansible.builtin.set_facts:
-        flexispot_rpm: "https://cdn.electronic.us/products/flexihub/linux/download/flexihub.x86_64-2.rpm"
+  - ansible.builtin.set_facts:
+      flexispot_rpm: "https://cdn.electronic.us/products/flexihub/linux/download/flexihub.x86_64-2.rpm"
 
-    - ansible.builtin.dnf:
-        name: "{{ flexispot_rpm }}"
-        state: present
-  when: '"usbtools" in pckgs'
-
+  - ansible.builtin.dnf:
+      name: "{{ flexispot_rpm }}"
+      state: present
+  when: ('"usbtools" in pckgs') and (not wslmachine)
 
 - name: ensure SEH UTN manager is present on system
   block:
-    - ansible.builtin.set_facts:
-        utnmanager_rpm: "https://www.seh-technology.com/fileadmin/user/downloads/deviceserver/tools/sehutnmanager-rpm_linux_64bit-4.0.7.zip"
+  - ansible.builtin.set_facts:
+      utnmanager_rpm: "https://www.seh-technology.com/fileadmin/user/downloads/deviceserver/tools/sehutnmanager-rpm_linux_64bit-4.0.7.zip"
 
-    - ansible.builtin.dnf:
-        name: "{{ utnmanager_rpm }}"
-        state: present
-  when: '"usbtools" in pckgs'
+  - ansible.builtin.dnf:
+      name: "{{ utnmanager_rpm }}"
+      state: present
+  when: ('"usbtools" in pckgs') and (not wslmachine)
