@@ -2,52 +2,52 @@
 
 - name: ensure additional repos & dnf-plugins-core are present on system
   block:
-    - ansible.builtin.dnf:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - "dnf-plugins-core"
-        - "epel-release"
+  - ansible.builtin.dnf:
+      name: "{{ item }}"
+      state: present
+    loop:
+    - "dnf-plugins-core"
+    - "epel-release"
 
-    - ansible.builtin.set_facts:
-        copr_repos:
-          - "yux/networking"
+  - ansible.builtin.set_facts:
+      copr_repos:
+      - "yux/networking"
 
-    # add Fedora specific COPR-repos
-    - ansible.builtin.set_facts:
-        copr_repos: "{{ copr_repos + ['nucleo/gocryptfs'] }}"
-      when: ansible_distribution == "Fedora"
+  # add Fedora specific COPR-repos
+  - ansible.builtin.set_facts:
+      copr_repos: "{{ copr_repos + ['nucleo/gocryptfs'] }}"
+    when: ansible_distribution == "Fedora"
 
-    # enabling COPR-Repos
-    - ansible.builtin.command: "dnf copr enable -y {{ item }}"
-      loop: copr_repos
+  # enabling COPR-Repos
+  - ansible.builtin.command: "dnf copr enable -y {{ item }}"
+    loop: copr_repos
 
 - name: ensure vm-guest tools are present if necessary
-  block: 
-    - ansible,builtin.dnf:
-        name: open-vm-tools
-        state: latest
-      when: "'Vmware' in ansible_system_vendor"
+  block:
+  - ansible,builtin.dnf:
+      name: open-vm-tools
+      state: latest
+    when: "'Vmware' in ansible_system_vendor"
 
 - name: ensure development tools are present on system
   ansible.builtin.dnf:
     name: "{{ item }}"
     state: latest
   loop:
-    - "@Development Tools"
-    - "procps-ng"
-    - "curl"
-    - "file"
-    - "git"
+  - "@Development Tools"
+  - "procps-ng"
+  - "curl"
+  - "file"
+  - "git"
 
 # including runtime installs and configurations
 - ansible.builtin.include_tasks:
     file: 'runtimes/{{ item }}.yml'
   loop:
-    - 'nodejs'
-    - 'go'
-    - 'python'
-    - 'rust'
+  - 'nodejs'
+  - 'go'
+  - 'python'
+  - 'rust'
 
 # including minimal tool set on host
 - ansible.builtin.include_tasks:
@@ -58,19 +58,19 @@
     name: 'chrony'
     state: latest
   tags:
-    - ntp
+  - ntp
 
 - name: ensure mergerfs is present on system
   block:
-    - community.general.github_release:
-        user: trapexit
-        repo: mergerfs
-      register: release
+  - community.general.github_release:
+      user: trapexit
+      repo: mergerfs
+    register: release
 
-    - ansible.builtin.set_facts:
-        basurl: https://github.com/trapexit/mergerfs/releases/download/2.40.2/mergerfs-2.40.2-1.fc40.x86_64.rpm
-        releaseurl: "{{ baseurl }}/{{ release.tag }}/mergerfs-{{ release.tag }}-1.fc40.{{ ansible_architecture }}.rpm"
+  - ansible.builtin.set_facts:
+      basurl: https://github.com/trapexit/mergerfs/releases/download/
+      releaseurl: "{{ baseurl }}/{{ release.tag }}/mergerfs-{{ release.tag }}-1.fc40.{{ ansible_architecture }}.rpm"
 
-    - ansible.builtin.dnf:
-        name: "{{ releaseurl }}"
-        state: present
+  - ansible.builtin.dnf:
+      name: "{{ releaseurl }}"
+      state: present
