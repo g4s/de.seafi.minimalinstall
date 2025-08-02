@@ -1,6 +1,9 @@
 ---
 
 - ansible.builtin.dnf:
-    name: rust 
-    state: latest
-    
+      name: "{{ item }}"
+      state: latest
+  loop:
+    - "rust"
+    - "cargo"
+  become: true

@@ -30,20 +30,24 @@
     when: "'Vmware' in ansible_system_vendor"
 
 - name: ensure development tools are present on system
-  ansible.builtin.dnf:
-    name: "{{ item }}"
-    state: latest
-  loop:
-  - "@Development Tools"
-  - "procps-ng"
-  - "curl"
-  - "file"
-  - "git"
-  - "gh"
+  block:
+  - ansible.builtin.dnf:
+      name: "{{ item }}"
+      state: latest
+    loop:
+    - "@Development Tools"
+    - "procps-ng"
+    - "curl"
+    - "file"
+    - "git"
+    - "gh"
+    become: true
+  tags:
+  - devtools
 
 # including runtime installs and configurations
 - ansible.builtin.include_tasks:
-    file: 'runtimes/{{ item }}.yml'
+    file: '{{ ansible_os_family }}/runtimes/{{ item }}.yml'
   loop:
   - 'nodejs'
   - 'go'
