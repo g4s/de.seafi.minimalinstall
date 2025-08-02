@@ -104,8 +104,14 @@
 
 - name: ensure cockpit is present and configured at host
   block:
+  - ansible.builtin.command: "sestatus"
+    register: "sestatus"
+    become: true
+    tags:
+    - selinux
+
   - ansible.builtin.dnf:
-      name: "{iten}"
+      name: "{{ iten }}"
       state: present
     loop:
     - "cockpit"
@@ -122,6 +128,20 @@
     - "cockpit-ws"
     - "cockpit-ws-selinux"
     become: true
+
+  - ansible.builtin.service:
+      name: "{{ item }}"
+      state: running
+      enabled: true
+    loop:
+    - "cockpit.socket"
+    become: true
+
+  - ansible.builtin.command: "semanage port -a -t websm_port_t -p tcp {{ cockpit_port | default('9090') }}"
+    become: true
+    when: ( "enabled" in sestatus.stdout )
+    tags:
+    - selinux
 
   - ansible.builtin.shell:
       cmd: |
